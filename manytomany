@@ -1,0 +1,64 @@
+package main
+
+import (
+	_ "encoding/json"
+	"fmt"
+
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
+)
+
+type EmployeeInfo struct {
+	gorm.Model
+    Name string `json:"name"`
+	Age  int	`json:"age"`
+	Address  []Address `gorm:"many2many:employee_address;"`
+}
+
+type Address struct {
+	gorm.Model
+	Add string `json:"add"`
+	City string `json:"city"`
+	EmployeeInfo []*EmployeeInfo `gorm:"many2many:employee_address;"`
+}
+
+func main() {
+
+    fmt.Println("Hello World")
+    dbConnection, err := gorm.Open("mysql", "root:Parnika@2018@/suresh?charset=utf8&parseTime=True&loc=Local")
+    if err != nil {
+        fmt.Println("error in db connection")
+    }
+
+    defer dbConnection.Close()
+
+	dbConnection.AutoMigrate(&EmployeeInfo{})
+	dbConnection.AutoMigrate(&Address{})
+
+	//for saving or creating data
+	//emp := &EmployeeInfo{Name: "suresh" ,Age: 28,
+	//	Address: []Address{
+	//		{ Add: "Ananthanager", City: "Bangalore"},
+	//		{ Add:"ecity", City: "Bangalore"},
+	//	},
+	//}
+	//dbConnection.Create(&emp)
+	 
+	//for Querying data in gorm
+	var emps EmployeeInfo 
+	//var emps []EmployeeInfo   
+	//address := Address{} for single data
+	address := []Address{} 
+	dbConnection.First(&emps) 
+	//dbConnection.Find(&address) 
+	dbConnection.Model(&emps).Related(&address , "Address") 
+
+	//for Querying Multiple emp and address data in gorm
+	//var emps []EmployeeInfo  
+	//address := []Address{} 
+	//dbConnection.Find(&emps) 
+	//dbConnection.Model(&emps).Related(&address , "Address") 
+
+	fmt.Println("EmployeeInfo : " ,emps)
+	fmt.Println("Address : " ,address)
+}
